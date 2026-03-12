@@ -1,15 +1,13 @@
 <div align="center">
 
-<br><br>
+<h3>D E İ M O S</h3>
 
-## D E İ M O S
+<hr>
 
 <br>
-
 <i>"The best way to predict the future is to invent it."</i>
-
 <br><br>
 
----
+<hr>
 
 </div>
