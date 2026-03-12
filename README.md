@@ -1,23 +1,15 @@
 <div align="center">
 
-<h1>DEİMOS</h1>
+<br><br>
 
-<hr>
+## D E İ M O S
 
 <br>
 
-<i>What stands in the way becomes the way.</i>
-<br><br>
-<i>Something beautiful is going to happen.</i>
+<i>"The best way to predict the future is to invent it."</i>
 
 <br><br>
 
-<hr>
+---
 
-</div>
-
-<br>
-
-<div align="right">
-  <img src="https://komarev.com/ghpvc/?username=DeimosS0&color=blue&style=flat-square" alt="Views" />
 </div>
