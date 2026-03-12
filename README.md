@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=35&duration=3000&pause=1000&color=2563EB&center=true&vCenter=true&width=600&lines=Merhaba%2C+Ben+%5BDeimosS0%5D+👋;What stands in the way becomes the way." alt="Typing SVG" />
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=35&duration=3000&pause=1000&color=FFFFFF&center=true&vCenter=true&width=800&lines=Merhaba%2C+Ben+DeimosS0+👋;What+stands+in+the+way+becomes+the+way." alt="Typing SVG" />
 </div>
 
 <br>
@@ -10,8 +10,8 @@
     
 ### 🚀 Hakkımda
 
-<div align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Merriweather&weight=500&size=22&duration=4000&pause=2000&color=FF5733&background=FFFFFF00&vCenter=true&width=500&lines=Something+beautiful+is+going+to+happen." alt="Typing SVG" />
+<div align="center">
+  <img src="https://readme-typing-svg.demolab.com?font=Merriweather&weight=500&size=22&duration=4000&pause=2000&color=FFFFFF&background=FFFFFF00&center=true&vCenter=true&width=500&lines=Something+beautiful+is+going+to+happen." alt="Typing SVG" />
 </div>
 <br>
 
@@ -47,12 +47,12 @@ Veri Bilimi ve Analitiği öğrencisiyim.
 ### 📈 GitHub İstatistiklerim (Dinamik)
 
 <div align="center">
-  <img src="https://github-readme-trophy.vercel.app/?username=%5BDeimosS0%5D&theme=radar&no-bg=true&margin-w=15" alt="Trophies" />
+  <img src="https://github-readme-trophy.vercel.app/?username=DeimosS0&theme=radar&no-bg=true&margin-w=15" alt="Trophies" />
   
   <br><br>
 
-  <img height="180em" src="https://github-readme-stats.vercel.app/api?username=%5BDeimosS0%5D&show_icons=true&theme=tokyonight&include_all_commits=true&count_private=true" alt="Stats" />
-  <img height="180em" src="https://github-readme-stats.vercel.app/api/top-langs/?username=%5BDeimosS0%5D&layout=compact&theme=tokyonight&langs_count=6" alt="Top Langs" />
+  <img height="180em" src="https://github-readme-stats.vercel.app/api?username=DeimosS0&show_icons=true&theme=tokyonight&include_all_commits=true&count_private=true" alt="Stats" />
+  <img height="180em" src="https://github-readme-stats.vercel.app/api/top-langs/?username=DeimosS0&layout=compact&theme=tokyonight&langs_count=6" alt="Top Langs" />
 </div>
 
 <br>
@@ -60,7 +60,7 @@ Veri Bilimi ve Analitiği öğrencisiyim.
 ### 🐍 Katkı Yılanı
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/%5BDeimosS0%5D/%5BDeimosS0%5D/output/github-contribution-grid-snake.svg" alt="Snake Game" />
+  <img src="https://raw.githubusercontent.com/DeimosS0/DeimosS0/output/github-contribution-grid-snake.svg" alt="Snake Game" />
 </div>
 
 <br>
@@ -69,12 +69,12 @@ Veri Bilimi ve Analitiği öğrencisiyim.
 
 ### 🤝 Benimle İletişime Geç
 
-<a href="mailto:deimosss97@gmailcom">
+<a href="mailto:deimosss97@gmail.com">
   <img src="https://img.shields.io/badge/Gmail-D14836?style=for-the-badge&logo=gmail&logoColor=white" alt="Gmail" />
 </a>
 
 </div>
 
 <div align="right">
-  <img src="https://komarev.com/ghpvc/?username=%5BDeimosS0%5D&color=blue&style=flat-square" alt="Views" />
+  <img src="https://komarev.com/ghpvc/?username=DeimosS0&color=blue&style=flat-square" alt="Views" />
 </div>
