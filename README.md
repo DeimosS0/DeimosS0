@@ -1,31 +1,22 @@
 <div align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=35&duration=3000&pause=1000&color=FFFFFF&center=true&vCenter=true&width=800&lines=Merhaba%2C+Ben+DeimosS0+👋;What+stands+in+the+way+becomes+the+way." alt="Typing SVG" />
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=35&duration=3000&pause=1000&color=FFFFFF&center=true&vCenter=true&width=800&lines=Merhaba,+Ben+DeimosS0;What+stands+in+the+way+becomes+the+way." alt="Typing SVG" />
 </div>
 
-<br>
+<br><br>
 
-<table border="0">
+<table border="0" width="100%">
  <tr>
-  <td width="65%">
-    
-### 🚀 Hakkımda
-
-<div align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Merriweather&weight=500&size=22&duration=4000&pause=2000&color=FFFFFF&background=FFFFFF00&center=true&vCenter=true&width=500&lines=Something+beautiful+is+going+to+happen." alt="Typing SVG" />
-</div>
-<br>
-
-Veri Bilimi ve Analitiği öğrencisiyim.
-
-* 📊 **Veri Bilimi:** Makine öğrenmesi algoritmaları, veri analizi (Kaggle & Datathon).
-* 🎮 **Oyun & Yazılım:** C# (OOP) ile FPS oyun mekanikleri ve araç (launcher) geliştirme.
-* 💻 **Web Geliştirme:** Modern teknolojilerle (Tailwind, Firebase, JS) dinamik uygulamalar ve sistemler tasarlama.
+  <td width="65%" align="center" valign="middle">
+    <img src="https://readme-typing-svg.demolab.com?font=Merriweather&weight=500&size=22&duration=4000&pause=2000&color=FFFFFF&background=FFFFFF00&center=true&vCenter=true&width=500&lines=Something+beautiful+is+going+to+happen." alt="Typing SVG" />
   </td>
-  <td width="35%" align="center">
-    <img src="https://media.giphy.com/media/qgQUggCGvnkNC/giphy.gif" width="250" alt="coding-matrix-gif">
+  <td width="35%" align="center" valign="middle">
+    <img src="https://user-images.githubusercontent.com/74038190/212284100-561115c5-1ce1-4c7b-9ea6-f40eb5e840a1.gif" width="200" alt="coding-gif">
   </td>
  </tr>
 </table>
+
+<br>
+
 <div align="center">
 
 ### 🛠️ Yeteneklerim & Araçlar
@@ -42,7 +33,7 @@ Veri Bilimi ve Analitiği öğrencisiyim.
 
 </div>
 
-<br>
+<br><br>
 
 ### 📈 GitHub İstatistiklerim (Dinamik)
 
@@ -55,7 +46,7 @@ Veri Bilimi ve Analitiği öğrencisiyim.
   <img height="180em" src="https://github-readme-stats.vercel.app/api/top-langs/?username=DeimosS0&layout=compact&theme=tokyonight&langs_count=6" alt="Top Langs" />
 </div>
 
-<br>
+<br><br>
 
 ### 🐍 Katkı Yılanı
 
@@ -63,7 +54,7 @@ Veri Bilimi ve Analitiği öğrencisiyim.
   <img src="https://raw.githubusercontent.com/DeimosS0/DeimosS0/output/github-contribution-grid-snake.svg" alt="Snake Game" />
 </div>
 
-<br>
+<br><br>
 
 <div align="center">
 
