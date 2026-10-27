@@ -1,4 +1,4 @@
-"""Builds the animated profile header: DEİMOS (the İ's dot drops in last) and scattered points settling into three clusters.
+"""Builds the animated profile header: DEİMOS (the İ's dot drops in last) and scattered points that settle into three clusters and keep orbiting them.
 
 Run: python assets/make_header.py  -> writes header-light.svg and header-dark.svg next to this file.
 """
@@ -36,9 +36,10 @@ def points():
     for k, (_, cx, cy) in enumerate(CLUSTERS):
         for _ in range(POINTS_PER_CLUSTER):
             a, r = rng.uniform(0, 2 * math.pi), abs(rng.gauss(0, SPREAD))
-            x, y = cx + r * math.cos(a), cy + r * math.sin(a) * 0.8
+            x, y = cx + r * math.cos(a), cy + r * math.sin(a)
             sx, sy = rng.uniform(FIELD[0], FIELD[2]), rng.uniform(FIELD[1], FIELD[3])
-            out.append(dict(k=k, x=x, y=y, dx=sx - x, dy=sy - y, r=rng.uniform(3.2, 6), d=rng.uniform(0.1, 0.9)))
+            # t: orbit period, inner points circle faster
+            out.append(dict(k=k, x=x, y=y, dx=sx - x, dy=sy - y, r=rng.uniform(3.2, 6), d=rng.uniform(0.1, 0.9), t=6 + r * .3))
     return out
 
 
@@ -58,8 +59,9 @@ def svg(theme):
     t = THEMES[theme]
     letters, (dot_x, dot_y) = title()
     dots = "\n".join(
-        f'  <circle class="p k{p["k"]}" cx="{p["x"]:.1f}" cy="{p["y"]:.1f}" r="{p["r"]:.1f}" '
-        f'style="--dx:{p["dx"]:.0f}px;--dy:{p["dy"]:.0f}px;animation-delay:{p["d"]:.2f}s"/>'
+        f'  <g class="orb o{p["k"]}" style="--t:{p["t"]:.1f}s;transform-origin:{CLUSTERS[p["k"]][1]}px {CLUSTERS[p["k"]][2]}px">'
+        f'<circle class="p k{p["k"]}" cx="{p["x"]:.1f}" cy="{p["y"]:.1f}" r="{p["r"]:.1f}" '
+        f'style="--dx:{p["dx"]:.0f}px;--dy:{p["dy"]:.0f}px;animation-delay:{p["d"]:.2f}s"/></g>'
         for p in points()
     )
     marks = "\n".join(
@@ -77,7 +79,9 @@ def svg(theme):
   .tag {{ font: 400 14px {MONO}; fill: {t["soft"]}; letter-spacing: 1.5px; }}
   .lbl {{ font: 500 13px {MONO}; fill: var(--c); text-anchor: middle; letter-spacing: 1px; }}
   .p {{ fill: var(--c); animation: settle 2.2s cubic-bezier(.22,.9,.24,1) both; }}
-  .ring {{ fill: none; stroke: var(--c); stroke-width: 1.5; stroke-dasharray: 3 5; opacity: .75; }}
+  .orb {{ transform-box: view-box; animation: spin var(--t) linear infinite; }}
+  .o1 {{ animation-direction: reverse; }}
+  .ring {{ fill: none; stroke: var(--c); stroke-width: 1.5; stroke-dasharray: 3 5; opacity: .75; animation: march 6s linear infinite; }}
   .mark {{ animation: pop .5s ease-out both; transform-box: fill-box; transform-origin: center; }}
   .in {{ animation: rise .9s cubic-bezier(.2,.8,.2,1) both; }}
   @keyframes settle {{
@@ -87,6 +91,8 @@ def svg(theme):
     100% {{ transform: translate(0, 0); }}
   }}
   @keyframes drop {{ from {{ opacity: 0; transform: translateY(-70px); }} 30% {{ opacity: 1; }} to {{ transform: none; }} }}
+  @keyframes spin {{ to {{ transform: rotate(360deg); }} }}
+  @keyframes march {{ to {{ stroke-dashoffset: -40; }} }}
   @keyframes pop {{ from {{ opacity: 0; transform: scale(.6); }} to {{ opacity: 1; transform: scale(1); }} }}
   @keyframes rise {{ from {{ opacity: 0; transform: translateY(10px); }} to {{ opacity: 1; transform: none; }} }}
   @media (prefers-reduced-motion: reduce) {{ * {{ animation: none !important; }} }}
