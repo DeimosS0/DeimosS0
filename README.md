@@ -1,13 +1,11 @@
-<div align="center">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/header-dark.svg">
+  <img alt="DEİMOS · Data Science & Analytics · Sakarya University · data, ai, play" src="assets/header-light.svg" width="100%">
+</picture>
 
-<h3>D E İ M O S</h3>
+Data science student, learning machine learning and AI by building things that play like games.
 
-<hr>
+### Toolbox
 
-<br>
-<i>"The best way to predict the future is to invent it."</i>
-<br><br>
-
-<hr>
-
-</div>
+Python · pandas · scikit-learn · LightGBM · SQL · Streamlit · Plotly  
+TypeScript · Astro · Unity (C#) · Remotion
