@@ -1,7 +1,7 @@
 """Builds the fight panel: the last 12 months of contributions as a fighting-game stage. A stick figure with a
 Mars-orange headband fights through the year: every week with contributions is one hit, and the bigger the week the
-bigger the move (jab, kick, flying kick, rising uppercut). Back-to-back active weeks make a combo, blocks fly, THE YEAR's
-health bar drains and the last hit is a K.O. Then the stage resets and the round starts again.
+bigger the move, each size with its own set of moves taken in turn. Back-to-back active weeks make a combo, blocks fly,
+THE YEAR's health bar drains and the last hit, a slow-motion uppercut, is a K.O. Then the stage resets and loops.
 
 Run: GH_TOKEN=<token> python assets/make_fight.py [out_dir]  -> writes fight-light.svg and fight-dark.svg
 (default out_dir: next to this file).
@@ -11,9 +11,10 @@ import random
 import sys
 from pathlib import Path
 
-from make_arcade import CELL, GY, MONO, MONTHS, PITCH, QUARTILES, W, fetch, level, streaks
+from contrib import MONTHS, QUARTILES, fetch, level, streaks
 
-H = 262
+W, H = 1000, 262
+CELL, PITCH, GY = 13, 17, 84  # calendar cell size, cell pitch, grid top
 FLOOR = GY + 7 * PITCH  # where the fighter's feet are
 THIGH, SHIN, UPPER, FORE, TORSO, SHOULDER, NECK = 10.5, 10.5, 9, 9, 15, 13.5, 21.5
 HIP = THIGH + SHIN  # hip height when standing straight
@@ -22,6 +23,7 @@ QUICK = .85  # time scale for every move
 INTRO, KO, RESET = 1.6, 3.0, 1.4
 SLOWMO = 2.2  # the finisher plays this many times slower
 SNAP, SOFT, FALL = "cubic-bezier(.2,.9,.3,1)", "ease-in-out", "cubic-bezier(.5,0,.9,.6)"
+MONO = "ui-monospace, 'SF Mono', 'Cascadia Code', Consolas, monospace"
 
 THEMES = {
     "light": dict(text="#1f2328", soft="#59636e", muted="#d1d9e0", dust="#d0d7de", mars="#dd6a45", gold="#c27c0e",
@@ -32,6 +34,7 @@ THEMES = {
 
 # Poses in degrees. Limbs: 0 hangs straight down, positive swings forward (the fighter faces right); forearms and shins
 # are relative to the bone above them. Torso: positive leans forward. dy: hip offset, negative is up. F/B: front/back.
+# Optional rot turns the whole body around the hip (negative is backwards) and face -1 mirrors it, for spins and flips.
 GUARD = dict(torso=6, uaF=35, faF=110, uaB=12, faB=128, thF=24, shF=-20, thB=-20, shB=-10, dy=2)
 
 
@@ -39,35 +42,78 @@ def P(**kw):
     return {**GUARD, **kw}
 
 
+def mirror(p):
+    """The same pose on the other leg and arm."""
+    swap = {"uaF": "uaB", "faF": "faB", "thF": "thB", "shF": "shB"}
+    swap.update({v: k for k, v in swap.items()})
+    return {swap.get(k, k): v for k, v in p.items()}
+
+
 LOW = P(dy=4, thF=28, shF=-28, thB=-24, shB=-18)
-RUNS = [dict(torso=16, uaF=-40, faF=80, uaB=48, faB=85, thF=50, shF=-28, thB=-40, shB=-60, dy=0),
-        dict(torso=16, uaF=4, faF=85, uaB=4, faB=85, thF=-4, shF=-18, thB=24, shB=-118, dy=-3),
-        dict(torso=16, uaF=48, faF=85, uaB=-40, faB=80, thF=-40, shF=-60, thB=50, shB=-28, dy=0),
-        dict(torso=16, uaF=4, faF=85, uaB=4, faB=85, thF=24, shF=-118, thB=-4, shB=-18, dy=-3)]
+# Run cycle, eight frames: contact, down, passing, up, then the same on the other leg.
+_run = [dict(torso=16, uaF=-45, faF=75, uaB=50, faB=85, thF=50, shF=-20, thB=-35, shB=-45, dy=0),
+        dict(torso=18, uaF=-30, faF=80, uaB=35, faB=85, thF=35, shF=-35, thB=-20, shB=-95, dy=2),
+        dict(torso=16, uaF=0, faF=85, uaB=0, faB=85, thF=0, shF=-15, thB=25, shB=-120, dy=-2),
+        dict(torso=15, uaF=35, faF=85, uaB=-35, faB=80, thF=-30, shF=-25, thB=55, shB=-70, dy=-4)]
+RUNS = _run + [mirror(p) for p in _run]
 VICTORY = dict(torso=-2, uaF=170, faF=4, uaB=-30, faB=40, thF=10, shF=-2, thB=-10, shB=-2, dy=0)
 
+_crouch = P(dy=6, torso=16, thF=40, shF=-70, thB=-32, shB=-62, uaF=-20, faF=60, uaB=-30, faB=60)
+_land = P(dy=6, thF=38, shF=-60, thB=-30, shB=-55)
 _jab = P(torso=20, uaF=88, faF=4, uaB=22, faB=120, thF=30, shF=-14)
-_kick = P(torso=-18, thF=95, shF=-3, thB=-8, shB=-2, uaF=15, faF=100, uaB=-35, faB=70, dy=-1)
+_cross = P(torso=28, uaB=95, faB=4, uaF=20, faF=125, thF=30, shF=-12, thB=-28, shB=-6)
+_elbow = P(torso=24, uaF=92, faF=150, uaB=10, faB=125, thF=34, shF=-20, dy=3)
 _chamber = P(torso=-4, thF=100, shF=-115, thB=-6, shB=-4, dy=-1)
+_kick = P(torso=-18, thF=95, shF=-3, thB=-8, shB=-2, uaF=15, faF=100, uaB=-35, faB=70, dy=-1)
+_rchamber = P(torso=-12, thF=110, shF=-120, thB=-5, shB=-3, uaF=10, faF=110, uaB=-25, faB=80, dy=-2)
+_round = P(torso=-38, thF=125, shF=-4, thB=-6, shB=-2, uaF=-10, faF=90, uaB=-50, faB=60, dy=-3)
+_sweep_in = P(dy=10, torso=28, thF=60, shF=-110, thB=-40, shB=-100, uaF=40, faF=60, uaB=70, faB=10)
+_sweep = P(dy=12, torso=34, thF=82, shF=-4, thB=-50, shB=-115, uaB=80, faB=5, uaF=50, faF=60)
 _fly = dict(torso=-24, uaF=-45, faF=40, uaB=60, faB=60, thF=100, shF=-2, thB=-45, shB=-100, dy=-26)
+_knee = dict(torso=14, uaF=150, faF=30, uaB=130, faB=40, thF=125, shF=-155, thB=-25, shB=-70, dy=-24)
+_spin = dict(torso=-20, uaF=-40, faF=40, uaB=60, faB=50, thF=100, shF=-2, thB=-30, shB=-90, dy=-26)
 _rise = dict(torso=6, uaF=168, faF=6, uaB=30, faB=95, thF=75, shF=-115, thB=-8, shB=-38, dy=-40)
+_flip_kick = dict(torso=0, uaF=-120, faF=20, uaB=-100, faB=20, thF=25, shF=0, thB=-30, shB=-60, dy=-42, rot=-160)
 # Moves: (effector, index of the hitting frame, frames). Frame: (seconds, pose, hip shift in px, easing to the next frame).
 MOVES = {
     "jab": ("hand", 2, [(0, GUARD, 0, SOFT), (.07, P(torso=0, uaF=20, faF=130), -1, SNAP), (.12, _jab, 5, "linear"),
                         (.18, _jab, 5, SOFT), (.30, GUARD, 3, SOFT)]),
+    "cross": ("bhand", 2, [(0, GUARD, 0, SOFT), (.07, P(torso=0, uaB=0, faB=135), -1, SNAP), (.12, _cross, 6, "linear"),
+                           (.18, _cross, 6, SOFT), (.30, GUARD, 4, SOFT)]),
+    "elbow": ("elbow", 2, [(0, GUARD, 0, SOFT), (.08, P(torso=-6, uaF=40, faF=150), 0, SNAP), (.13, _elbow, 8, "linear"),
+                           (.19, _elbow, 8, SOFT), (.31, GUARD, 6, SOFT)]),
     "kick": ("foot", 2, [(0, GUARD, 0, SOFT), (.09, _chamber, 2, SNAP), (.15, _kick, 4, "linear"), (.22, _kick, 4, SOFT),
                          (.30, _chamber, 4, SOFT), (.38, GUARD, 5, SOFT)]),
-    "fly": ("foot", 3, [(0, GUARD, 0, SOFT),
-                        (.09, P(dy=6, torso=16, thF=40, shF=-70, thB=-32, shB=-62, uaF=-20, faF=60, uaB=-30, faB=60), 0, SNAP),
+    "roundhouse": ("foot", 2, [(0, GUARD, 0, SOFT), (.10, _rchamber, 2, SNAP), (.17, _round, 3, "linear"),
+                               (.24, _round, 3, SOFT), (.33, _rchamber, 3, SOFT), (.42, GUARD, 5, SOFT)]),
+    "sweep": ("foot", 2, [(0, GUARD, 0, SOFT), (.10, _sweep_in, 0, SNAP), (.17, _sweep, 6, "linear"), (.25, _sweep, 6, SOFT),
+                          (.36, _sweep_in, 6, SOFT), (.46, GUARD, 6, SOFT)]),
+    "fly": ("foot", 3, [(0, GUARD, 0, SOFT), (.09, _crouch, 0, SNAP),
                         (.22, dict(torso=-8, uaF=-35, faF=50, uaB=55, faB=70, thF=85, shF=-105, thB=-25, shB=-115, dy=-30), 12, "linear"),
-                        (.30, _fly, 22, "linear"), (.36, _fly, 23, SOFT),
-                        (.48, P(dy=6, thF=38, shF=-60, thB=-30, shB=-55), 28, SOFT), (.58, GUARD, 28, SOFT)]),
+                        (.30, _fly, 22, "linear"), (.36, _fly, 23, SOFT), (.48, _land, 28, SOFT), (.58, GUARD, 28, SOFT)]),
+    "knee": ("knee", 3, [(0, GUARD, 0, SOFT), (.09, _crouch, 0, SNAP),
+                         (.20, dict(torso=6, uaF=120, faF=40, uaB=100, faB=50, thF=110, shF=-150, thB=-20, shB=-80, dy=-28), 12, "linear"),
+                         (.27, _knee, 20, "linear"), (.33, _knee, 21, SOFT), (.45, _land, 26, SOFT), (.55, GUARD, 26, SOFT)]),
+    "spin": ("foot", 3, [(0, GUARD, 0, SOFT), (.09, _crouch, 0, SNAP),
+                         (.19, dict(torso=0, uaF=60, faF=90, uaB=60, faB=90, thF=60, shF=-110, thB=-10, shB=-100, dy=-26, face=-1), 10, "linear"),
+                         (.27, _spin, 18, "linear"), (.33, _spin, 19, SOFT), (.45, _land, 24, SOFT), (.55, GUARD, 24, SOFT)]),
     "uppercut": ("hand", 2, [(0, GUARD, 0, SOFT),
                              (.10, P(dy=8, torso=22, uaF=15, faF=145, thF=45, shF=-80, thB=-32, shB=-66), 0, SNAP),
                              (.22, _rise, 8, "linear"), (.32, {**_rise, "dy": -48}, 10, FALL),
                              (.50, P(dy=-10, thF=40, shF=-75, thB=-22, shB=-80, uaF=60, faF=90), 12, SOFT),
                              (.58, P(dy=7, thF=40, shF=-70, thB=-30, shB=-60), 12, SOFT), (.70, GUARD, 12, SOFT)]),
+    "flip": ("foot", 3, [(0, GUARD, 0, SOFT),
+                         (.10, P(dy=9, torso=18, thF=45, shF=-85, thB=-35, shB=-70, uaF=-30, faF=40, uaB=-40, faB=40), 0, SNAP),
+                         (.18, dict(torso=-10, uaF=-160, faF=10, uaB=-150, faB=10, thF=10, shF=-5, thB=-10, shB=-30, dy=-30, rot=-60), 4, "linear"),
+                         (.26, _flip_kick, 8, "linear"),
+                         (.36, dict(torso=10, uaF=40, faF=90, uaB=40, faB=90, thF=110, shF=-140, thB=100, shB=-140, dy=-30, rot=-290), 10, "linear"),
+                         (.48, P(dy=8, thF=40, shF=-70, thB=-30, shB=-60, rot=-360), 12, "linear"),
+                         (.483, P(dy=8, thF=40, shF=-70, thB=-30, shB=-60), 12, SOFT),  # -360° and 0° look the same
+                         (.60, GUARD, 12, SOFT)]),
 }
+# Moves by week size: the first tier whose floor the week reaches, taking that tier's moves in turn.
+TIERS = [(40, ["uppercut", "flip"]), (15, ["fly", "knee", "spin"]), (5, ["kick", "roundhouse", "sweep"]),
+         (0, ["jab", "cross", "elbow"])]
 JOINTS = ["torso", "uaF", "faF", "uaB", "faB", "thF", "shF", "thB", "shB"]
 
 
@@ -78,22 +124,20 @@ def bone(angle, length):
 
 
 def effector(kind, p):
-    """Front hand or foot of pose p, relative to the hip."""
-    if kind == "hand":
-        t = p["torso"]
-        sx, sy = -bone(t, SHOULDER)[0], -bone(t, SHOULDER)[1]
-        ex, ey = bone(t - p["uaF"], UPPER)
-        hx, hy = bone(t - p["uaF"] - p["faF"], FORE)
-        return sx + ex + hx, sy + ey + hy
-    kx, ky = bone(-p["thF"], THIGH)
-    fx, fy = bone(-p["thF"] - p["shF"], SHIN)
-    return kx + fx, ky + fy
-
-
-def move_for(week, biggest):
-    if week >= 40 or week == biggest:
-        return "uppercut"
-    return "fly" if week >= 15 else "kick" if week >= 5 else "jab"
+    """The point of pose p that lands the hit, relative to the hip, with the body's rotation and facing applied."""
+    if kind in ("hand", "bhand", "elbow"):
+        side, t = "B" if kind == "bhand" else "F", p["torso"]
+        sx, sy = bone(t, SHOULDER)
+        ex, ey = bone(t - p["ua" + side], UPPER)
+        hx, hy = (0, 0) if kind == "elbow" else bone(t - p["ua" + side] - p["fa" + side], FORE)
+        x, y = -sx + ex + hx, -sy + ey + hy
+    else:
+        kx, ky = bone(-p["thF"], THIGH)
+        fx, fy = (0, 0) if kind == "knee" else bone(-p["thF"] - p["shF"], SHIN)
+        x, y = kx + fx, ky + fy
+    x *= p.get("face", 1)
+    r = math.radians(p.get("rot", 0))
+    return x * math.cos(r) - y * math.sin(r), x * math.sin(r) + y * math.cos(r)
 
 
 def build(weeks, xp_now):
@@ -126,8 +170,10 @@ def build(weeks, xp_now):
             frames.pop()
         frames.append((t, x, p, ease))
 
-    for k in range(int(INTRO / .4) + 1):  # bounce on the spot during ROUND 1 / FIGHT!
-        at(k * .4, x0, GUARD if k % 2 == 0 else LOW, SOFT)
+    # ROUND 1 / FIGHT!: bounce in guard, then wave the other one in.
+    beckon, wave = P(torso=2, uaF=70, faF=60), P(torso=2, uaF=70, faF=125)
+    for s, p in [(0, GUARD), (.35, LOW), (.6, GUARD), (.75, beckon), (.9, wave), (1.05, beckon), (1.2, wave), (1.4, GUARD)]:
+        at(s, x0, p, SOFT)
     t, x = INTRO, x0
 
     def run_to(target, end_pose=GUARD):
@@ -135,20 +181,22 @@ def build(weeks, xp_now):
         dist = target - x
         if dist <= 2:
             return
-        step = .06 if dist > DASH_FROM else .08
-        if dist > DASH_FROM:
-            dashes.append((t, t + dist / DASH))
-        dur = dist / (DASH if dist > DASH_FROM else RUN)
-        n = max(2, round(dur / step))
+        dashing = dist > DASH_FROM
+        dur = dist / (DASH if dashing else RUN)
+        if dashing:
+            dashes.append((t, t + dur))
+        n = max(2, round(dur / (.04 if dashing else .05)))
         for k in range(1, n):
-            at(t + dur * k / n, x + dist * k / n, RUNS[k % 4])
+            at(t + dur * k / n, x + dist * k / n, RUNS[k % len(RUNS)])
         t, x = t + dur, target
         at(t, x, end_pose, SOFT)
 
-    hits, dashes, biggest = [], [], max(sums) if fights else 0
+    hits, dashes, turns = [], [], {}
     for i, col in enumerate(fights):
         last = i == len(fights) - 1
-        kind = "uppercut" if last else move_for(sums[col], biggest)  # the last hit is the finisher, in slow motion
+        floor, pool = next(tier for tier in TIERS if sums[col] >= tier[0])
+        kind = "uppercut" if last else pool[turns.get(floor, 0) % len(pool)]  # the finisher, in slow motion
+        turns[floor] = turns.get(floor, 0) + 1
         pace = QUICK * (SLOWMO if last else 1)
         reach, imp, seq = MOVES[kind]
         fx, fy = effector(reach, seq[imp][1])
@@ -162,17 +210,19 @@ def build(weeks, xp_now):
                          at=(base + seq[imp][2] + fx, FLOOR - HIP + p["dy"] + fy)))
         t, x = t + seq[-1][0] * pace, base + seq[-1][2]
     t_ko = hits[-1]["t"] if hits else t
-    at(t + .2, x, VICTORY, "cubic-bezier(.2,.8,.4,1)")  # arm up, then a little victory hop
-    at(t + .45, x, {**VICTORY, "dy": -12}, FALL)
-    at(t + .7, x, VICTORY, SOFT)
+    # Arm up, a little victory hop, then two fist pumps.
+    for s, p, e in [(.2, VICTORY, "cubic-bezier(.2,.8,.4,1)"), (.45, {**VICTORY, "dy": -12}, FALL), (.7, VICTORY, SOFT),
+                    (.95, {**VICTORY, "faF": 70}, SOFT), (1.15, VICTORY, SOFT), (1.35, {**VICTORY, "faF": 70}, SOFT),
+                    (1.55, VICTORY, SOFT)]:
+        at(t + s, x, p, e)
     t_reset = t_ko + KO
     at(t_reset, x, VICTORY, SOFT)
     # Off the right edge, back in from the left while the blocks come back.
     at(t_reset + .45, W + 40, RUNS[0])
     at(t_reset + .46, -40, RUNS[1])
     D = t_reset + RESET
-    for k in range(1, 9):
-        at(t_reset + .46 + (D - t_reset - .46) * k / 9, -40 + (x0 + 40) * k / 9, RUNS[k % 4])
+    for k in range(1, 12):
+        at(t_reset + .46 + (D - t_reset - .46) * k / 12, -40 + (x0 + 40) * k / 12, RUNS[k % len(RUNS)])
     at(D, x0, GUARD)
 
     def kf(name, stops):
@@ -187,7 +237,7 @@ def build(weeks, xp_now):
         keep = [v for i, v in enumerate(vals) if i in (0, len(vals) - 1) or not vals[i - 1][1] == v[1] == vals[i + 1][1]]
         return kf(name, [(s, f"transform:{v}{ease(e)}") for s, v, e in keep])
 
-    css = [track("root", lambda hx, p: f"translate({hx:.1f}px,{FLOOR - HIP + p['dy']:.1f}px)"),
+    css = [track("root", lambda hx, p: f"translate({hx:.1f}px,{FLOOR - HIP + p['dy']:.1f}px) rotate({p.get('rot', 0)}deg) scale({p.get('face', 1)},1)"),
            track("shadow", lambda hx, p: f"translate({hx:.1f}px,{FLOOR + 1}px) scale({max(.35, 1 + min(0, p['dy']) / 60):.2f})")]
     dash = [(0, "opacity:0")]
     for a, b in dashes:
@@ -205,7 +255,7 @@ def build(weeks, xp_now):
     for i, b in enumerate(blocks):
         h = by_col[b["col"]]
         start = h["t"] + .018 * abs(b["y"] + CELL / 2 - h["at"][1]) / PITCH
-        up = h["kind"] == "uppercut"
+        up = h["kind"] in ("uppercut", "flip")
         vx, vy = (rng.uniform(-30, 60), rng.uniform(200, 280)) if up else (rng.uniform(40, 120), rng.uniform(110, 200))
         spin = rng.uniform(-540, 540)
         path = [(start + k * .1 * h["slow"], vx * k * .1, -vy * k * .1 + 260 * (k * .1) ** 2, spin * k / 7, 1 if k < 4 else 1 - (k - 3) / 4)
@@ -218,7 +268,7 @@ def build(weeks, xp_now):
         css.append(kf(f"b{i}", stops))
         block_svg.append(f'<rect class="bl q{b["q"]}" x="{b["x"]:.1f}" y="{b["y"]}" width="{CELL}" height="{CELL}" rx="3" style="animation-name:b{i}"/>')
 
-    # Sparks, combo counter, health bars and the stage shake on uppercuts.
+    # Sparks, combo counter, health bars and the stage shake on the biggest moves.
     sparks, combos, hp, ghost, shake = [], [], [(0, 1)], [(0, 1)], [(0, "transform:translate(0px,0px)")]
     left, combo = total, 0
     for i, h in enumerate(hits):
@@ -228,7 +278,7 @@ def build(weeks, xp_now):
         if i == 0:
             ghost.append((h["t"], 1))
         ghost.append((h["t"] + .5, left / total))
-        big = h["kind"] == "uppercut"
+        big = h["kind"] in ("uppercut", "flip")
         css.append(kf(f"k{i}", [(h["t"] - .01, "transform:scale(.2);opacity:0"), (h["t"], "transform:scale(.2);opacity:1"), (h["t"] + .1, f"transform:scale({1.5 if big else 1});opacity:1"),
                                 (h["t"] + .22, f"transform:scale({1.8 if big else 1.25});opacity:0")]))
         sparks.append(f'<g transform="translate({h["at"][0]:.1f} {h["at"][1]:.1f})"><g class="spark" style="animation-name:k{i}">'
@@ -256,7 +306,7 @@ def build(weeks, xp_now):
                          (t_reset, "opacity:1;transform:scale(1)"), (t_reset + .3, "opacity:0;transform:scale(1)")]))
     return dict(gx=gx, grid_w=grid_w, D=D, x0=x0, css="\n  ".join(css), dust="".join(dust), blocks="\n".join(block_svg),
                 sparks="".join(sparks), combos="".join(combos), months=months, total=total, active=active,
-                cur=cur_streak, best=best_streak, lv=level(xp_now))
+                cur=cur_streak, best=best_streak, lv=level(xp_now), moves=[h["kind"] for h in hits])
 
 
 def rig():
